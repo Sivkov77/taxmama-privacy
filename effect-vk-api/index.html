@@ -55,15 +55,15 @@ async function finish(){
  let delOk=0;
  for(const id of duplicateIds){
   try{await api('wall.delete',{owner_id:OWNER_ID,post_id:id}); delOk++; log('DELETE_OK '+id);}
-  catch(e){log('DELETE_SKIP '+id+' '+(e.error_data?.error_reason||e.message||'error'));}
+  catch(e){log('DELETE_SKIP '+id+' '+err(e));}
  }
- try{await api('wall.pin',{owner_id:OWNER_ID,post_id:3});log('PIN_OK 3');}catch(e){log('PIN_SKIP');}
+ try{await api('wall.pin',{owner_id:OWNER_ID,post_id:3});log('PIN_OK 3');}catch(e){log('PIN_SKIP '+err(e));}
  for(const [link,text] of [
   ['https://rutube.ru/channel/28123243/','RUTUBE — видео фильма'],
   ['https://t.me/Compassioneffect','Telegram — Эффект компассии'],
   ['https://www.youtube.com/@%D0%AD%D1%84%D1%84%D0%B5%D0%BA%D1%82%D0%9A%D0%BE%D0%BC%D0%BF%D0%B0%D1%81%D1%81%D0%B8%D0%B8','YouTube — Эффект компассии']
  ]){
-  try{await api('groups.addLink',{group_id:GROUP_ID,link,text});log('LINK_OK '+text);}catch(e){log('LINK_SKIP '+text);}
+  try{await api('groups.addLink',{group_id:GROUP_ID,link,text});log('LINK_OK '+text);}catch(e){log('LINK_SKIP '+text+' '+err(e));}
  }
  let videoOk=0;
  for(const v of videos){
@@ -73,17 +73,17 @@ async function finish(){
    const att='video'+sv.owner_id+'_'+sv.video_id+(sv.access_key?'_'+sv.access_key:'');
    await api('wall.edit',{owner_id:OWNER_ID,post_id:v.post,message:v.text,attachments:att});
    videoOk++; log('VIDEO_OK post='+v.post+' video='+sv.video_id);
-  }catch(e){log('VIDEO_FAIL post='+v.post+' '+(e.error_data?.error_reason||e.message||'error'));}
+  }catch(e){log('VIDEO_FAIL post='+v.post+' '+err(e));}
  }
  try{
   const q=await api('wall.get',{owner_id:OWNER_ID,filter:'postponed',count:100});
   log('QUEUE_COUNT '+(q?.count??'unknown'));
- }catch(e){log('QUEUE_CHECK_FAIL');}
+ }catch(e){log('QUEUE_CHECK_FAIL '+err(e));}
  statusEl.textContent='Готово: удалено дублей '+delOk+'; нативных видео '+videoOk+' из '+videos.length+'.';
  statusEl.className=videoOk===videos.length?'ok':'err';
  $('finish').disabled=false;
 }
-$('auth').onclick=()=>auth().catch(e=>{statusEl.textContent='Ошибка авторизации: '+(e.error_data?.error_reason||e.message||e);statusEl.className='err';});
-$('finish').onclick=()=>finish().catch(e=>{statusEl.textContent='Ошибка завершения: '+(e.error_data?.error_reason||e.message||e);statusEl.className='err';$('finish').disabled=false;});
+$('auth').onclick=()=>auth().catch(e=>{statusEl.textContent='Ошибка авторизации: '+err(e);statusEl.className='err';});
+$('finish').onclick=()=>finish().catch(e=>{statusEl.textContent='Ошибка завершения: '+err(e);statusEl.className='err';$('finish').disabled=false;});
 vkBridge.send('VKWebAppInit').then(()=>{statusEl.textContent='VK Bridge готов. Нажмите «1. Авторизовать VK API».';}).catch(e=>{statusEl.textContent='Ошибка VK Bridge';statusEl.className='err';});
 </script></body></html>
