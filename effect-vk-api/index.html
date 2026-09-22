@@ -26,7 +26,7 @@ const APP_ID=54783165, GROUP_ID=241430340, OWNER_ID=-241430340;
 let TOKEN='';
 const $=id=>document.getElementById(id), logEl=$('log'), statusEl=$('status');
 function log(s){logEl.textContent += s+'\n'; logEl.scrollTop=logEl.scrollHeight;}
-async function api(method,params={}){
+function err(e){const d=e&&e.error_data?e.error_data:{};return [d.error_code,d.error_reason,d.error_msg,d.error_type].filter(Boolean).join(' | ')||(e&&e.message)||'unknown';}\nasync function api(method,params={}){
   const r=await vkBridge.send('VKWebAppCallAPIMethod',{method,params:{...params,access_token:TOKEN,v:'5.199'}});
   return r.response;
 }
