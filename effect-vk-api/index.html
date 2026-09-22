@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Effect Compassion API</title>
+  <script src="https://unpkg.com/@vkontakte/vk-bridge/dist/browser.min.js"></script>
+  <style>
+    body{font-family:Arial,sans-serif;background:#0f1115;color:#fff;margin:0;padding:32px}
+    .card{max-width:720px;margin:auto;background:#171a21;border-radius:18px;padding:28px}
+    button{font-size:18px;padding:14px 20px;border:0;border-radius:12px;cursor:pointer;margin:8px 8px 8px 0}
+    #status{margin:18px 0;white-space:pre-wrap}
+    textarea{width:100%;min-height:120px;background:#0b0d11;color:#9ef;border:1px solid #333;border-radius:10px;padding:12px;box-sizing:border-box}
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>Effect Compassion API</h1>
+    <p>Техническое мини-приложение для получения токена администратора VK.</p>
+    <button id="getToken">Получить токен VK API</button>
+    <button id="copyToken" disabled>Скопировать токен</button>
+    <div id="status">Инициализация…</div>
+    <textarea id="token" readonly placeholder="Токен появится здесь после подтверждения"></textarea>
+  </div>
+  <script>
+    const APP_ID = 54783165;
+    const statusEl = document.getElementById('status');
+    const tokenEl = document.getElementById('token');
+    const getBtn = document.getElementById('getToken');
+    const copyBtn = document.getElementById('copyToken');
+    async function init(){
+      try{
+        await vkBridge.send('VKWebAppInit');
+        statusEl.textContent='VK Bridge готов. Нажмите «Получить токен VK API».';
+      }catch(e){
+        statusEl.textContent='Ошибка инициализации: '+(e && e.error_data ? JSON.stringify(e.error_data) : String(e));
+      }
+    }
+    getBtn.addEventListener('click', async () => {
+      getBtn.disabled=true;
+      statusEl.textContent='Запрашиваем права groups, wall, photos, video…';
+      try{
+        const data = await vkBridge.send('VKWebAppGetAuthToken',{
+          app_id: APP_ID,
+          scope: 'groups,wall,photos,video'
+        });
+        tokenEl.value=data.access_token || '';
+        copyBtn.disabled=!tokenEl.value;
+        statusEl.textContent='Готово. Права: '+(data.scope || 'не указаны');
+      }catch(e){
+        statusEl.textContent='Ошибка получения токена: '+(e && e.error_data ? JSON.stringify(e.error_data) : String(e));
+      }finally{getBtn.disabled=false;}
+    });
+    copyBtn.addEventListener('click', async () => {
+      if(!tokenEl.value) return;
+      try{
+        await navigator.clipboard.writeText(tokenEl.value);
+        statusEl.textContent='Токен скопирован в буфер.';
+      }catch(e){
+        tokenEl.focus(); tokenEl.select(); document.execCommand('copy');
+        statusEl.textContent='Токен скопирован в буфер.';
+      }
+    });
+    init();
+  </script>
+</body>
+</html>
